@@ -1,19 +1,21 @@
 package com.absence.presentation.web;
 
-import com.absence.domain.dto.AbsenceRequestDTO;
-import com.absence.domain.dto.EmployeeDTO;
-import com.absence.domain.service.AbsenceService;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+
+import com.absence.data.registry.RepositoryRegistry;
+import com.absence.domain.dto.AbsenceRequestDTO;
+import com.absence.domain.dto.EmployeeDTO;
+import com.absence.domain.service.AbsenceService;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Servlet-based web controller for employee absence request operations.
@@ -40,6 +42,7 @@ public class EmployeeWebController extends HttpServlet {
     private AbsenceService absenceService;
 
     public EmployeeWebController() {
+       
     }
 
     public EmployeeWebController(AbsenceService absenceService) {
@@ -51,6 +54,13 @@ public class EmployeeWebController extends HttpServlet {
      */
     public void setAbsenceService(AbsenceService absenceService) {
         this.absenceService = absenceService;
+    }
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        if (this.absenceService == null) {
+            this.absenceService = RepositoryRegistry.getInstance().getAbsenceService();
+        }
     }
 
     @Override
@@ -137,13 +147,14 @@ public class EmployeeWebController extends HttpServlet {
     private void handleGetEmployee(String employeeId, HttpServletResponse response)
             throws IOException {
 
-        absenceService.getEmployee(employeeId)
-                .ifPresentOrElse(
-                        employee -> sendJsonResponse(response, HttpServletResponse.SC_OK,
-                                formatEmployeeJson(employee)),
-                        () -> sendError(response, HttpServletResponse.SC_NOT_FOUND,
-                                "Employee not found: " + employeeId)
-                );
+                var employeeOpt = absenceService.getEmployee(employeeId);
+                if (employeeOpt.isPresent()) {
+                    sendJsonResponse(response, HttpServletResponse.SC_OK,
+                            formatEmployeeJson(employeeOpt.get()));
+                } else {
+                    sendError(response, HttpServletResponse.SC_NOT_FOUND,
+                            "Employee not found: " + employeeId);
+                }
     }
 
     private void handleGetRequests(String employeeId, HttpServletResponse response)

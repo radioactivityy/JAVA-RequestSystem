@@ -1,5 +1,6 @@
 package com.absence.presentation.web;
 
+import com.absence.data.registry.RepositoryRegistry;
 import com.absence.domain.dto.AbsenceRequestDTO;
 import com.absence.domain.dto.EmployeeDTO;
 import com.absence.domain.service.AbsenceService;
@@ -51,6 +52,18 @@ public class EmployeeWebController extends HttpServlet {
      */
     public void setAbsenceService(AbsenceService absenceService) {
         this.absenceService = absenceService;
+    }
+
+    /**
+     * Initializes the servlet by obtaining the AbsenceService from the RepositoryRegistry.
+     * This method is called by the servlet container when the servlet is first loaded.
+     */
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        if (this.absenceService == null) {
+            this.absenceService = RepositoryRegistry.getInstance().getAbsenceService();
+        }
     }
 
     @Override

@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Absence Request System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .navbar-subtitle {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Search Section */
+        .search-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .search-section h2 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #4a5568;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #4a5568;
+            font-size: 0.875rem;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #fc8181 0%, #e53e3e 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        /* Employee Info Grid */
+        .employee-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #718096;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .info-value.highlight {
+            color: #667eea;
+        }
+
+        /* Request Table */
+        .requests-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .requests-table th,
+        .requests-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .requests-table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .requests-table tr:hover {
+            background: #f7fafc;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-cancelled {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.25rem;
+            color: #2d3748;
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-body .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #718096;
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .search-row {
+                flex-direction: column;
+            }
+
+            .form-group {
+                width: 100%;
+            }
+
+            .requests-table {
+                font-size: 0.875rem;
+            }
+
+            .requests-table th,
+            .requests-table td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <h1>Employee Absence Request System</h1>
+        <p class="navbar-subtitle">Manage employee leave requests efficiently</p>
+    </nav>
+
+    <div class="container">
+        <!-- Alert Messages -->
+        <div id="alert" class="alert"></div>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <h2>Find Employee</h2>
+            <div class="search-row">
+                <div class="form-group">
+                    <label for="employeeSelect">Select Employee</label>
+                    <select id="employeeSelect">
+                        <option value="">-- Select an employee --</option>
+                        <option value="EMP001">EMP001 - Alice Johnson (Engineering)</option>
+                        <option value="EMP002">EMP002 - Bob Smith (Engineering)</option>
+                        <option value="EMP003">EMP003 - Carol Williams (Marketing)</option>
+                        <option value="EMP004">EMP004 - David Brown (Marketing)</option>
+                        <option value="EMP005">EMP005 - Eve Davis (HR)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="employeeIdInput">Or Enter Employee ID</label>
+                    <input type="text" id="employeeIdInput" placeholder="e.g., EMP001">
+                </div>
+                <button class="btn btn-primary" onclick="loadEmployee()">
+                    <span>Search</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Employee Details Card -->
+        <div id="employeeCard" class="card hidden">
+            <div class="card-header">
+                <h3 class="card-title" id="employeeName">Employee Details</h3>
+                <button class="btn btn-success" onclick="openRequestModal()">
+                    + New Request
+                </button>
+            </div>
+            <div class="employee-grid">
+                <div class="info-item">
+                    <div class="info-label">Employee ID</div>
+                    <div class="info-value" id="empId">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Email</div>
+                    <div class="info-value" id="empEmail">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Department</div>
+                    <div class="info-value" id="empDepartment">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Annual Leave Balance</div>
+                    <div class="info-value highlight" id="empAnnualLeave">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Remaining Leave</div>
+                    <div class="info-value highlight" id="empRemainingLeave">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Pending Requests</div>
+                    <div class="info-value" id="empPendingCount">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requests Table Card -->
+        <div id="requestsCard" class="card hidden">
+            <div class="card-header">
+                <h3 class="card-title">Absence Requests</h3>
+                <button class="btn btn-secondary" onclick="loadRequests()">
+                    Refresh
+                </button>
+            </div>
+            <div id="requestsContainer">
+                <table class="requests-table">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Days</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="requestsBody">
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyRequests" class="empty-state hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <p>No absence requests found</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Request Modal -->
+    <div id="requestModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Submit New Absence Request</h3>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date</label>
+                    <input type="date" id="endDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="reason">Reason</label>
+                    <input type="text" id="reason" placeholder="Enter reason for absence">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRequestModal()">Cancel</button>
+                <button class="btn btn-success" onclick="submitRequest()">Submit Request</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentEmployeeId = null;
+        const API_BASE = 'absence/employee';
+
+        // Show alert message
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type} show`;
+            setTimeout(() => {
+                alert.classList.remove('show');
+            }, 5000);
+        }
+
+        // Load employee data
+        async function loadEmployee() {
+            const selectValue = document.getElementById('employeeSelect').value;
+            const inputValue = document.getElementById('employeeIdInput').value.trim();
+            const employeeId = inputValue || selectValue;
+
+            if (!employeeId) {
+                showAlert('Please select or enter an employee ID', 'error');
+                return;
+            }
+
+            currentEmployeeId = employeeId;
+
+            try {
+                const response = await fetch(`${API_BASE}/${employeeId}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    showAlert(data.error, 'error');
+                    document.getElementById('employeeCard').classList.add('hidden');
+                    document.getElementById('requestsCard').classList.add('hidden');
+                    return;
+                }
+
+                // Update employee card
+                document.getElementById('employeeName').textContent = data.name;
+                document.getElementById('empId').textContent = data.id;
+                document.getElementById('empEmail').textContent = data.email;
+                document.getElementById('empDepartment').textContent = data.department;
+                document.getElementById('empAnnualLeave').textContent = data.annualLeaveBalance + ' days';
+                document.getElementById('empRemainingLeave').textContent = data.remainingLeaveBalance + ' days';
+                document.getElementById('empPendingCount').textContent = data.pendingRequestsCount;
+
+                document.getElementById('employeeCard').classList.remove('hidden');
+
+                // Load requests
+                await loadRequests();
+
+            } catch (error) {
+                showAlert('Failed to load employee data: ' + error.message, 'error');
+            }
+        }
+
+        // Load employee requests
+        async function loadRequests() {
+            if (!currentEmployeeId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/${currentEmployeeId}/requests`);
+                const data = await response.json();
+
+                const tbody = document.getElementById('requestsBody');
+                const emptyState = document.getElementById('emptyRequests');
+                const container = document.getElementById('requestsContainer');
+
+                if (!data.requests || data.requests.length === 0) {
+                    tbody.innerHTML = '';
+                    container.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                } else {
+                    container.classList.remove('hidden');
+                    emptyState.classList.add('hidden');
+
+                    tbody.innerHTML = data.requests.map(req => `
+                        <tr>
+                            <td>${req.id}</td>
+                            <td>${req.startDate}</td>
+                            <td>${req.endDate}</td>
+                            <td>${req.durationDays}</td>
+                            <td>${req.reason || '-'}</td>
+                            <td><span class="status-badge status-${req.status.toLowerCase()}">${req.status}</span></td>
+                            <td>
+                                ${req.status === 'PENDING' ?
+                                    `<button class="btn btn-danger" onclick="cancelRequest('${req.id}')">Cancel</button>` :
+                                    '-'}
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+
+                document.getElementById('requestsCard').classList.remove('hidden');
+
+            } catch (error) {
+                showAlert('Failed to load requests: ' + error.message, 'error');
+            }
+        }
+
+        // Open new request modal
+        function openRequestModal() {
+            document.getElementById('requestModal').classList.add('active');
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+        }
+
+        // Close modal
+        function closeRequestModal() {
+            document.getElementById('requestModal').classList.remove('active');
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('reason').value = '';
+        }
+
+        // Submit new request
+        async function submitRequest() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const reason = document.getElementById('reason').value;
+
+            if (!startDate || !endDate) {
+                showAlert('Please select start and end dates', 'error');
+                return;
+            }
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('startDate', startDate);
+                formData.append('endDate', endDate);
+                if (reason) formData.append('reason', reason);
+
+                const response = await fetch(`${API_BASE}/${currentEmployeeId}/request`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showAlert(data.error, 'error');
+                    return;
+                }
+
+                showAlert('Absence request submitted successfully!', 'success');
+                closeRequestModal();
+                await loadEmployee(); // Refresh data
+
+            } catch (error) {
+                showAlert('Failed to submit request: ' + error.message, 'error');
+            }
+        }
+
+        // Cancel request
+        async function cancelRequest(requestId) {
+            if (!confirm('Are you sure you want to cancel this request?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/${currentEmployeeId}/request/${requestId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    showAlert(data.error, 'error');
+                    return;
+                }
+
+                showAlert('Request cancelled successfully!', 'success');
+                await loadEmployee(); // Refresh data
+
+            } catch (error) {
+                showAlert('Failed to cancel request: ' + error.message, 'error');
+            }
+        }
+
+        // Handle enter key in search input
+        document.getElementById('employeeIdInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadEmployee();
+            }
+        });
+
+        // Handle select change
+        document.getElementById('employeeSelect').addEventListener('change', function() {
+            if (this.value) {
+                document.getElementById('employeeIdInput').value = '';
+                loadEmployee();
+            }
+        });
+
+        // Close modal on overlay click
+        document.getElementById('requestModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRequestModal();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "managers": [
+    {
+      "id": "MGR001",
+      "name": "Frank Miller",
+      "email": "frank.miller@company.com",
+      "department": "Engineering",
+      "active": true
+    },
+    {
+      "id": "MGR002",
+      "name": "Grace Lee",
+      "email": "grace.lee@company.com",
+      "department": "Marketing",
+      "active": true
+    },
+    {
+      "id": "MGR003",
+      "name": "Henry Wilson",
+      "email": "henry.wilson@company.com",
+      "department": null,
+      "active": true
+    },
+    {
+      "id": "MGR004",
+      "name": "Isabel Garcia",
+      "email": "isabel.garcia@company.com",
+      "department": "HR",
+      "active": false
+    }
+  ]
+}

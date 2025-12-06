@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<employees>
+    <employee id="EMP001">
+        <name>Alice Johnson</name>
+        <email>alice.johnson@company.com</email>
+        <department>Engineering</department>
+        <annualLeaveBalance>25</annualLeaveBalance>
+        <absenceRequests>
+            <request id="REQ001">
+                <employeeId>EMP001</employeeId>
+                <startDate>2025-01-15</startDate>
+                <endDate>2025-01-17</endDate>
+                <reason>Family vacation</reason>
+                <status>PENDING</status>
+                <submissionDate>2024-12-01</submissionDate>
+            </request>
+        </absenceRequests>
+    </employee>
+    <employee id="EMP002">
+        <name>Bob Smith</name>
+        <email>bob.smith@company.com</email>
+        <department>Engineering</department>
+        <annualLeaveBalance>20</annualLeaveBalance>
+        <absenceRequests>
+            <request id="REQ002">
+                <employeeId>EMP002</employeeId>
+                <startDate>2025-02-10</startDate>
+                <endDate>2025-02-14</endDate>
+                <reason>Medical appointment and recovery</reason>
+                <status>PENDING</status>
+                <submissionDate>2024-12-02</submissionDate>
+            </request>
+        </absenceRequests>
+    </employee>
+    <employee id="EMP003">
+        <name>Carol Williams</name>
+        <email>carol.williams@company.com</email>
+        <department>Marketing</department>
+        <annualLeaveBalance>22</annualLeaveBalance>
+        <absenceRequests>
+            <request id="REQ003">
+                <employeeId>EMP003</employeeId>
+                <startDate>2025-03-01</startDate>
+                <endDate>2025-03-05</endDate>
+                <reason>Conference attendance</reason>
+                <status>PENDING</status>
+                <submissionDate>2024-12-03</submissionDate>
+            </request>
+        </absenceRequests>
+    </employee>
+    <employee id="EMP004">
+        <name>David Brown</name>
+        <email>david.brown@company.com</email>
+        <department>Marketing</department>
+        <annualLeaveBalance>18</annualLeaveBalance>
+        <absenceRequests/>
+    </employee>
+    <employee id="EMP005">
+        <name>Eve Davis</name>
+        <email>eve.davis@company.com</email>
+        <department>HR</department>
+        <annualLeaveBalance>24</annualLeaveBalance>
+        <absenceRequests>
+            <request id="REQ004">
+                <employeeId>EMP005</employeeId>
+                <startDate>2025-01-20</startDate>
+                <endDate>2025-01-24</endDate>
+                <reason>Personal matters</reason>
+                <status>PENDING</status>
+                <submissionDate>2024-12-04</submissionDate>
+            </request>
+        </absenceRequests>
+    </employee>
+</employees>

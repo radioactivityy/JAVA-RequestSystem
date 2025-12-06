@@ -137,13 +137,14 @@ public class EmployeeWebController extends HttpServlet {
     private void handleGetEmployee(String employeeId, HttpServletResponse response)
             throws IOException {
 
-        absenceService.getEmployee(employeeId)
-                .ifPresentOrElse(
-                        employee -> sendJsonResponse(response, HttpServletResponse.SC_OK,
-                                formatEmployeeJson(employee)),
-                        () -> sendError(response, HttpServletResponse.SC_NOT_FOUND,
-                                "Employee not found: " + employeeId)
-                );
+        var employeeOpt = absenceService.getEmployee(employeeId);
+        if (employeeOpt.isPresent()) {
+            sendJsonResponse(response, HttpServletResponse.SC_OK,
+                    formatEmployeeJson(employeeOpt.get()));
+        } else {
+            sendError(response, HttpServletResponse.SC_NOT_FOUND,
+                    "Employee not found: " + employeeId);
+        }
     }
 
     private void handleGetRequests(String employeeId, HttpServletResponse response)

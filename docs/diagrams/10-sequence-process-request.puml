@@ -1,0 +1,109 @@
+@startuml Sequence - Process Request (Manager)
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title Sequence Diagram: Manager Processes Absence Request (CLI)
+
+actor Manager as mgr
+participant "ManagerCommandLine\nInterface" as cli
+participant "AbsenceService" as svc
+participant "ManagerRepository" as mgrRepo
+participant "EmployeeRepository" as empRepo
+participant "Manager" as mgrEntity
+participant "AbsenceRequest" as req
+database "employees.xml" as xmlDb
+database "managers.json" as jsonDb
+
+mgr -> cli : Enter choice: 2 (Approve) or 3 (Reject)
+activate cli
+
+cli -> cli : Read requestId from input
+cli -> svc : processRequest(managerId, requestId, approved)
+activate svc
+
+' Validate Manager
+svc -> mgrRepo : findById(managerId)
+activate mgrRepo
+mgrRepo -> jsonDb : loadManagers()
+mgrRepo --> svc : Optional<Manager>
+deactivate mgrRepo
+
+alt Manager not found
+    svc --> cli : throw IllegalArgumentException
+    cli --> mgr : "Manager not found"
+else Manager found
+    svc -> mgrEntity : isActive()
+    mgrEntity --> svc : boolean
+
+    alt Manager not active
+        svc --> cli : throw IllegalArgumentException
+        cli --> mgr : "Manager is not active"
+    else Manager is active
+        ' Find the request
+        svc -> empRepo : findAbsenceRequestById(requestId)
+        activate empRepo
+        empRepo -> empRepo : Search all employees' requests
+        empRepo --> svc : Optional<AbsenceRequest>
+        deactivate empRepo
+
+        alt Request not found
+            svc --> cli : throw IllegalArgumentException
+            cli --> mgr : "Request not found"
+        else Request found
+            svc -> req : getStatus()
+            req --> svc : RequestStatus
+
+            alt Request already processed
+                svc --> cli : throw IllegalStateException
+                cli --> mgr : "Request already processed"
+            else Request is PENDING
+                ' Check authorization
+                svc -> empRepo : findById(request.employeeId)
+                empRepo --> svc : Optional<Employee>
+
+                svc -> mgrEntity : canManageDepartment(employee.department)
+                note right of mgrEntity
+                    Returns true if:
+                    - manager.department is null (manages all)
+                    - manager.department == employee.department
+                end note
+                mgrEntity --> svc : boolean
+
+                alt Not authorized for department
+                    svc --> cli : throw IllegalArgumentException
+                    cli --> mgr : "Not authorized for this department"
+                else Authorized
+                    ' Update request status
+                    svc -> req : setStatus(APPROVED/REJECTED)
+                    svc -> req : setProcessedByManagerId(managerId)
+
+                    svc -> empRepo : updateAbsenceRequest(request)
+                    activate empRepo
+                    empRepo -> xmlDb : saveEmployees()
+                    empRepo --> svc : boolean
+                    deactivate empRepo
+
+                    svc -> svc : AbsenceRequestDTO.fromEntity(request, employeeName)
+                    svc --> cli : AbsenceRequestDTO
+                    deactivate svc
+
+                    cli -> cli : Display success message
+                    cli --> mgr : "Request [approved/rejected] successfully"
+                end
+            end
+        end
+    end
+end
+
+deactivate cli
+
+note over mgr, jsonDb
+    <b>Authorization Rules:</b>
+    1. Manager must exist and be active
+    2. Request must be in PENDING status
+    3. Manager must have authority over employee's department
+       (department match or null = all departments)
+end note
+
+@enduml

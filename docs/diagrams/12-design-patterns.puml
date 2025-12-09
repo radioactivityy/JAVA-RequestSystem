@@ -1,0 +1,145 @@
+@startuml Design Patterns Overview
+!theme plain
+skinparam packageFontSize 14
+skinparam noteFontSize 11
+
+title Design Patterns Used in Employee Absence Request System
+
+package "Creational Patterns" #LightBlue {
+
+    package "Singleton Pattern" {
+        class RepositoryRegistry <<Singleton>> {
+            {static} -instance: RepositoryRegistry
+            --
+            {static} +getInstance(): RepositoryRegistry
+        }
+        note bottom
+            Thread-safe double-checked locking
+            Composition root for DI
+        end note
+    }
+
+    package "Factory Method Pattern" {
+        class EmployeeDTO <<Factory>> {
+            {static} +fromEntity(e: Employee): EmployeeDTO
+            {static} +summary(e: Employee): EmployeeDTO
+        }
+        class AbsenceRequestDTO <<Factory>> {
+            {static} +fromEntity(r: AbsenceRequest, name: String): AbsenceRequestDTO
+        }
+        note bottom
+            Static factory methods for
+            entity to DTO conversion
+        end note
+    }
+}
+
+package "Structural Patterns" #LightGreen {
+
+    package "Adapter Pattern" {
+        class LocalDateAdapter {
+            +unmarshal(String): LocalDate
+            +marshal(LocalDate): String
+        }
+        note bottom
+            JAXB XmlAdapter
+            Converts LocalDate to String
+        end note
+    }
+
+    package "Anti-Corruption Layer" {
+        class EmployeeXmlModel {
+            {static} +fromDomain(): EmployeeXmlModel
+            +toDomain(): Employee
+        }
+        class ManagerJsonModel {
+            {static} +fromDomain(): ManagerJsonModel
+            +toDomain(): Manager
+        }
+        note bottom
+            Isolates domain entities
+            from framework annotations
+        end note
+    }
+}
+
+package "Behavioral Patterns" #LightYellow {
+
+    package "Repository Pattern" {
+        interface EmployeeRepository <<interface>>
+        interface ManagerRepository <<interface>>
+        class XmlEmployeeRepository
+        class JsonManagerRepository
+
+        XmlEmployeeRepository ..|> EmployeeRepository
+        JsonManagerRepository ..|> ManagerRepository
+        note bottom
+            Abstracts data persistence
+            Domain defines contract
+            Data layer implements
+        end note
+    }
+
+    package "Service Layer Pattern" {
+        interface AbsenceService <<interface>>
+        class AbsenceServiceImpl
+
+        AbsenceServiceImpl ..|> AbsenceService
+        note bottom
+            Orchestrates business logic
+            Coordinates repositories
+            Returns DTOs
+        end note
+    }
+
+    package "DTO Pattern" {
+        class DTOs <<record>> {
+            EmployeeDTO
+            AbsenceRequestDTO
+            ManagerDTO
+        }
+        note bottom
+            Immutable Java Records
+            Decouples PL from domain
+            Computed/display fields
+        end note
+    }
+}
+
+package "Architectural Patterns" #LightPink {
+
+    package "Three-Tier Architecture" {
+        class PresentationLayer <<Layer>>
+        class BusinessLogicLayer <<Layer>>
+        class DataAccessLayer <<Layer>>
+
+        PresentationLayer --> BusinessLogicLayer
+        BusinessLogicLayer --> DataAccessLayer
+    }
+
+    package "MVC Pattern" {
+        class Model <<MVC>>
+        class View <<MVC>>
+        class Controller <<MVC>>
+
+        Controller --> Model
+        Controller --> View
+        Model --> View
+    }
+
+    package "Aggregate Root" {
+        class Employee <<AggregateRoot>> {
+            +addAbsenceRequest()
+            +getAbsenceRequests()
+        }
+        class AbsenceRequest <<Entity>>
+
+        Employee *-- AbsenceRequest
+        note bottom
+            Employee owns and manages
+            child AbsenceRequest entities
+        end note
+    }
+}
+
+@enduml

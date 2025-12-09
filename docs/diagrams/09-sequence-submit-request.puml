@@ -1,0 +1,85 @@
+@startuml Sequence - Submit Absence Request
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title Sequence Diagram: Employee Submits Absence Request (Web)
+
+actor Employee as emp
+participant "EmployeeWebController" as ctrl
+participant "AbsenceService" as svc
+participant "EmployeeRepository" as repo
+participant "Employee" as entity
+participant "AbsenceRequest" as req
+database "employees.xml" as db
+
+emp -> ctrl : POST /absence/employee/{id}/request\n?startDate=...&endDate=...&reason=...
+activate ctrl
+
+ctrl -> svc : submitRequest(employeeId, startDate, endDate, reason)
+activate svc
+
+svc -> repo : findById(employeeId)
+activate repo
+repo -> db : loadEmployees()
+repo --> svc : Optional<Employee>
+deactivate repo
+
+alt Employee not found
+    svc --> ctrl : throw IllegalArgumentException
+    ctrl --> emp : 400 Bad Request\n{"error": "Employee not found"}
+else Employee found
+    svc -> req ** : new AbsenceRequest(employeeId, startDate, endDate, reason)
+    note right of req
+        Auto-generates UUID
+        Sets submissionDate = today
+        Status = PENDING
+    end note
+
+    svc -> req : isValid()
+    req --> svc : boolean
+
+    alt Request invalid (dates)
+        svc --> ctrl : throw IllegalArgumentException
+        ctrl --> emp : 400 Bad Request\n{"error": "Invalid request dates"}
+    else Request valid
+        svc -> entity : hasSufficientBalance(request)
+        entity -> req : calculateDuration()
+        req --> entity : long days
+        entity -> entity : calculateRemainingLeave()
+        entity --> svc : boolean
+
+        alt Insufficient leave balance
+            svc --> ctrl : throw IllegalArgumentException
+            ctrl --> emp : 400 Bad Request\n{"error": "Insufficient leave balance"}
+        else Sufficient balance
+            svc -> entity : addAbsenceRequest(request)
+            entity -> entity : absenceRequests.add(request)
+
+            svc -> repo : save(employee)
+            activate repo
+            repo -> db : saveEmployees()
+            repo --> svc : Employee
+            deactivate repo
+
+            svc -> svc : AbsenceRequestDTO.fromEntity(request, employeeName)
+            svc --> ctrl : AbsenceRequestDTO
+            deactivate svc
+
+            ctrl -> ctrl : formatRequestJson(dto)
+            ctrl --> emp : 201 Created\n{"id": "...", "status": "Pending", ...}
+        end
+    end
+end
+
+deactivate ctrl
+
+note over emp, db
+    <b>Business Rules Applied:</b>
+    1. Employee must exist
+    2. Start date >= today
+    3. End date >= start date
+    4. Sufficient leave balance
+end note
+
+@enduml

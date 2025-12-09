@@ -1,0 +1,92 @@
+@startuml DTO Layer Classes
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam packageFontSize 14
+skinparam linetype ortho
+
+title Data Transfer Objects (com.absence.domain.dto)
+
+package "Domain DTOs" <<Record>> {
+
+    class EmployeeDTO <<record>> {
+        +id: String
+        +name: String
+        +email: String
+        +department: String
+        +annualLeaveBalance: int
+        +remainingLeaveBalance: int
+        +pendingRequestsCount: int
+        +recentRequests: List<AbsenceRequestDTO>
+        --
+        {static} +fromEntity(employee: Employee): EmployeeDTO
+        {static} +summary(employee: Employee): EmployeeDTO
+        +toDisplayString(): String
+    }
+
+    class AbsenceRequestDTO <<record>> {
+        +id: String
+        +employeeId: String
+        +employeeName: String
+        +startDate: LocalDate
+        +endDate: LocalDate
+        +durationDays: long
+        +reason: String
+        +status: String
+        +processedByManagerId: String
+        +submissionDate: LocalDate
+        --
+        {static} +fromEntity(request: AbsenceRequest, employeeName: String): AbsenceRequestDTO
+        +toEntity(): AbsenceRequest
+        +toDisplayString(): String
+    }
+
+    class ManagerDTO <<record>> {
+        +id: String
+        +name: String
+        +email: String
+        +department: String
+        +active: boolean
+        --
+        {static} +fromEntity(manager: Manager): ManagerDTO
+        +toDisplayString(): String
+    }
+}
+
+package "Domain Entities" {
+    class Employee <<Entity>>
+    class AbsenceRequest <<Entity>>
+    class Manager <<Entity>>
+}
+
+' Factory Method Pattern
+EmployeeDTO ..> Employee : <<creates from>>
+AbsenceRequestDTO ..> AbsenceRequest : <<creates from>>
+ManagerDTO ..> Manager : <<creates from>>
+
+EmployeeDTO o-- AbsenceRequestDTO : contains
+
+note right of EmployeeDTO
+  <b>Factory Methods</b>
+  - fromEntity(): Full conversion
+  - summary(): Lightweight (no requests)
+  <b>Computed Fields</b>
+  - remainingLeaveBalance
+  - pendingRequestsCount
+end note
+
+note bottom of AbsenceRequestDTO
+  <b>Bidirectional Conversion</b>
+  - fromEntity(): DTO from domain
+  - toEntity(): Domain from DTO
+end note
+
+note as N1
+  <b>DTO Pattern Benefits:</b>
+  - Decouples presentation from domain
+  - Immutable (Java 17 Records)
+  - Computed/denormalized fields
+  - Display-ready formatting
+end note
+
+@enduml

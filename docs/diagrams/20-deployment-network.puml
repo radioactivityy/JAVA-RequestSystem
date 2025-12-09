@@ -1,0 +1,99 @@
+@startuml Deployment Network Topology
+!theme plain
+skinparam linetype ortho
+
+title Employee Absence Request System - Network Topology
+
+' ==================== INTERNET ====================
+
+cloud "Internet" as Internet #LightCyan {
+}
+
+' ==================== DMZ ====================
+
+frame "DMZ (Demilitarized Zone)" as DMZ #LightCoral {
+
+    node "<<device>>\nFirewall" as FW1 {
+        component [Ingress Rules] as Ingress
+    }
+
+    node "<<device>>\nReverse Proxy" as Proxy {
+        component [Nginx] as NginxProxy
+        note bottom
+          - SSL Termination
+          - Rate Limiting
+          - Request Routing
+        end note
+    }
+}
+
+' ==================== INTERNAL NETWORK ====================
+
+frame "Internal Network" as InternalNet #LightGreen {
+
+    node "<<device>>\nInternal Firewall" as FW2 {
+        component [Access Control] as ACL
+    }
+
+    frame "Application Zone" as AppZone #LightYellow {
+
+        node "<<executionEnvironment>>\nDocker Host" as Docker {
+
+            node "<<container>>\nabsence-web" as WebContainer {
+                artifact "absence-system.war" as WAR
+                component [EmployeeWebController] as WebCtrl
+            }
+
+            node "<<container>>\nabsence-cli" as CLIContainer {
+                artifact "absence-cli.jar" as CLIJar
+                component [ManagerCLI] as CLI
+            }
+        }
+
+        node "<<device>>\nApplication Server" as AppNode {
+            component [AbsenceServiceImpl] as SVC
+            component [Repositories] as Repos
+        }
+    }
+
+    frame "Data Zone" as DataZone #LightPink {
+
+        node "<<device>>\nStorage Server" as StorageNode {
+            database "employees.xml" as EmpDB
+            database "managers.json" as MgrDB
+        }
+    }
+}
+
+' ==================== USERS ====================
+
+actor "Employee\n(External)" as ExtEmp
+actor "Employee\n(Internal)" as IntEmp
+actor "Manager\n(Internal)" as IntMgr
+
+' ==================== CONNECTIONS ====================
+
+ExtEmp --> Internet : HTTPS:443
+Internet --> FW1 : HTTPS:443
+FW1 --> Proxy : HTTP:8080
+Proxy --> FW2 : HTTP:8080
+
+IntEmp --> FW2 : HTTP:8080
+IntMgr --> Docker : SSH:22
+
+FW2 --> WebContainer : HTTP:8080
+WebContainer --> AppNode : Internal API
+CLIContainer --> AppNode : Internal API
+AppNode --> StorageNode : NFS
+
+' ==================== LEGEND ====================
+
+legend bottom
+  |= Zone |= Security Level |= Access |
+  | Internet | Public | Anyone |
+  | DMZ | Semi-trusted | Filtered traffic |
+  | App Zone | Internal | Authenticated users |
+  | Data Zone | Restricted | App servers only |
+endlegend
+
+@enduml

@@ -1,0 +1,109 @@
+@startuml Deployment Diagram - Distributed
+!theme plain
+skinparam linetype ortho
+skinparam nodesep 50
+
+title Employee Absence Request System - Deployment Diagram (Distributed/Production)
+
+' ==================== CLIENT TIER ====================
+
+frame "Client Tier" as ClientTier #LightBlue {
+
+    node "<<device>>\nEmployee Browser" as EmpBrowser {
+        artifact "Web Application" as WebApp
+    }
+
+    node "<<device>>\nMobile Device" as Mobile {
+        artifact "Mobile App (Future)" as MobileApp
+    }
+
+    node "<<device>>\nManager Terminal" as MgrTerm {
+        artifact "CLI Application" as CLIApp
+    }
+}
+
+' ==================== WEB TIER ====================
+
+frame "Web Tier" as WebTier #LightGreen {
+
+    node "<<device>>\nLoad Balancer" as LB {
+        component [Nginx/HAProxy] as LBComp
+    }
+
+    node "<<device>>\nWeb Server 1" as WebServer1 {
+        node "<<executionEnvironment>>\nTomcat" as Tomcat1 {
+            artifact "absence-system.war" as WAR1 {
+                component [EmployeeWebController] as WebCtrl1
+            }
+        }
+    }
+
+    node "<<device>>\nWeb Server 2" as WebServer2 {
+        node "<<executionEnvironment>>\nTomcat" as Tomcat2 {
+            artifact "absence-system.war" as WAR2 {
+                component [EmployeeWebController] as WebCtrl2
+            }
+        }
+    }
+}
+
+' ==================== APPLICATION TIER ====================
+
+frame "Application Tier" as AppTier #LightYellow {
+
+    node "<<device>>\nApp Server" as AppServer {
+        node "<<executionEnvironment>>\nJVM" as JVM {
+            artifact "business-logic.jar" as BLJar {
+                component [AbsenceServiceImpl] as SVC
+                component [RepositoryRegistry] as Registry
+            }
+        }
+    }
+}
+
+' ==================== DATA TIER ====================
+
+frame "Data Tier" as DataTier #LightPink {
+
+    node "<<device>>\nFile Server / NAS" as FileServer {
+        node "<<executionEnvironment>>\nShared Storage" as Storage {
+            artifact "employees.xml" as EmpXML
+            artifact "managers.json" as MgrJSON
+        }
+    }
+
+    note right of FileServer
+      <b>Future Enhancement:</b>
+      Replace file storage with
+      Database Server:
+      - PostgreSQL
+      - MySQL
+      - MongoDB
+    end note
+}
+
+' ==================== CONNECTIONS ====================
+
+EmpBrowser --> LB : HTTPS
+Mobile --> LB : HTTPS
+MgrTerm --> AppServer : SSH/VPN
+
+LB --> WebServer1 : HTTP
+LB --> WebServer2 : HTTP
+
+WebServer1 --> AppServer : Internal Network
+WebServer2 --> AppServer : Internal Network
+
+AppServer --> FileServer : NFS/SMB
+
+' ==================== LEGENDS ====================
+
+legend bottom
+  |= Tier |= Components |= Scalability |
+  | Client | Browsers, Mobile, CLI | N/A |
+  | Web | Load Balancer, Web Servers | Horizontal |
+  | Application | Business Logic | Vertical |
+  | Data | File Storage | Shared/Replicated |
+endlegend
+
+@enduml

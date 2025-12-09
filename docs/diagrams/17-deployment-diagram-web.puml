@@ -1,0 +1,89 @@
+@startuml Deployment Diagram - Web Server
+!theme plain
+skinparam linetype ortho
+
+title Employee Absence Request System - Deployment Diagram (Web Server Mode)
+
+' ==================== CLIENT NODES ====================
+
+node "<<device>>\nEmployee Workstation" as EmpPC #LightBlue {
+    node "<<executionEnvironment>>\nWeb Browser" as Browser {
+        artifact "<<client>>\nREST Client / Web App" as WebClient
+    }
+}
+
+node "<<device>>\nManager Workstation" as MgrPC #LightGreen {
+    node "<<executionEnvironment>>\nTerminal" as MgrTerminal {
+        artifact "<<executable>>\nCLI Client" as CLIClient
+    }
+}
+
+' ==================== SERVER NODE ====================
+
+node "<<device>>\nApplication Server" as AppServer #LightYellow {
+
+    node "<<executionEnvironment>>\nServlet Container (Tomcat/Jetty)" as ServletContainer {
+
+        artifact "<<war>>\nabsence-system.war" as WAR {
+            component [EmployeeWebController] as WebCtrl <<servlet>>
+            component [ManagerCommandLineInterface] as CLI
+            component [AbsenceServiceImpl] as SVC
+            component [XmlEmployeeRepository] as XMLRepo
+            component [JsonManagerRepository] as JSONRepo
+            component [RepositoryRegistry] as Registry
+        }
+    }
+
+    node "<<executionEnvironment>>\nFile System" as ServerFS {
+        artifact "<<file>>\ndata/employees.xml" as EmpXML
+        artifact "<<file>>\ndata/managers.json" as MgrJSON
+    }
+}
+
+' ==================== COMMUNICATION PATHS ====================
+
+EmpPC -- AppServer : <<HTTP/HTTPS>>\nREST API
+MgrPC -- AppServer : <<SSH/Local>>\nCLI Access
+
+WebClient --> WebCtrl : HTTP Request\n(GET/POST/DELETE)
+CLIClient --> CLI : stdin/stdout
+
+XMLRepo --> EmpXML : <<local file I/O>>
+JSONRepo --> MgrJSON : <<local file I/O>>
+
+' ==================== NOTES ====================
+
+note top of EmpPC
+  <b>Employee Access</b>
+  - Submit absence requests
+  - View request status
+  - Cancel pending requests
+end note
+
+note top of MgrPC
+  <b>Manager Access</b>
+  - View pending requests
+  - Approve/reject requests
+  - View all requests
+end note
+
+note right of ServletContainer
+  <b>Servlet Container</b>
+  - Apache Tomcat 10+
+  - Eclipse Jetty
+  - Jakarta EE compatible
+
+  <b>URL Mapping:</b>
+  /absence/employee/*
+end note
+
+note bottom of WAR
+  <b>WAR Contents:</b>
+  - WEB-INF/classes/
+  - WEB-INF/lib/
+    - jackson-*.jar
+    - jaxb-*.jar
+  - web.xml (servlet config)
+end note
+
+@enduml

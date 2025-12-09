@@ -1,0 +1,100 @@
+@startuml Deployment Artifacts
+!theme plain
+skinparam linetype ortho
+
+title Employee Absence Request System - Artifact Dependencies
+
+' ==================== SOURCE ARTIFACTS ====================
+
+package "Source Code" as SRC #WhiteSmoke {
+
+    artifact "src/main/java" as JavaSrc {
+        artifact "com.absence.presentation" as PresentationPkg
+        artifact "com.absence.domain" as DomainPkg
+        artifact "com.absence.data" as DataPkg
+    }
+
+    artifact "src/main/resources" as Resources {
+        artifact "web.xml" as WebXML
+    }
+
+    artifact "pom.xml" as POM
+}
+
+' ==================== BUILD ARTIFACTS ====================
+
+package "Build Output" as BUILD #LightBlue {
+
+    artifact "target/classes" as Classes {
+        artifact "*.class files" as ClassFiles
+    }
+
+    artifact "<<jar>>\nabsence-system.jar" as JAR {
+        artifact "META-INF/MANIFEST.MF" as Manifest
+        artifact "com/**/*.class" as JarClasses
+    }
+
+    artifact "<<war>>\nabsence-system.war" as WAR {
+        artifact "WEB-INF/classes/" as WARClasses
+        artifact "WEB-INF/lib/" as WARLib {
+            artifact "jackson-databind.jar" as Jackson
+            artifact "jaxb-api.jar" as JAXB
+            artifact "jakarta.servlet-api.jar" as Servlet
+        }
+        artifact "WEB-INF/web.xml" as WARWebXML
+    }
+}
+
+' ==================== RUNTIME ARTIFACTS ====================
+
+package "Runtime Data" as RUNTIME #LightGreen {
+
+    artifact "<<XML>>\ndata/employees.xml" as EmpXML {
+        artifact "Employee records" as EmpData
+        artifact "Absence requests" as ReqData
+    }
+
+    artifact "<<JSON>>\ndata/managers.json" as MgrJSON {
+        artifact "Manager records" as MgrData
+    }
+}
+
+' ==================== DEPENDENCIES ====================
+
+POM ..> JavaSrc : compiles
+POM ..> Resources : includes
+JavaSrc --> Classes : <<compile>>
+Classes --> JAR : <<package>>
+JAR --> WAR : <<include>>
+Resources --> WAR : <<include>>
+
+JAR ..> EmpXML : <<runtime>>\nread/write
+JAR ..> MgrJSON : <<runtime>>\nread/write
+
+' ==================== NOTES ====================
+
+note right of POM
+  <b>Maven Build</b>
+  mvn clean package
+
+  <b>Dependencies:</b>
+  - jackson-databind
+  - jaxb-api
+  - jakarta.servlet-api
+  - junit-jupiter (test)
+end note
+
+note right of WAR
+  <b>Deployable Unit</b>
+  Deploy to Servlet Container
+  (Tomcat, Jetty, etc.)
+end note
+
+note bottom of RUNTIME
+  <b>Data Files</b>
+  Created at first run
+  Thread-safe access
+  ReadWriteLock protection
+end note
+
+@enduml

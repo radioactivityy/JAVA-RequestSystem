@@ -1,0 +1,73 @@
+@startuml Component Diagram - High Level
+!theme plain
+skinparam componentStyle uml2
+skinparam linetype ortho
+
+title Employee Absence Request System - Component Diagram (High Level)
+
+package "Presentation Layer" #LightBlue {
+    [Manager CLI] as CLI
+    [Employee Web API] as WebAPI
+}
+
+package "Business Logic Layer" #LightGreen {
+    [Absence Service] as SVC
+}
+
+package "Domain Layer" #LightYellow {
+    [Employee Repository] as EmpRepo
+    [Manager Repository] as MgrRepo
+
+    package "Domain Entities" as Entities {
+        [Employee]
+        [AbsenceRequest]
+        [Manager]
+        [RequestStatus]
+    }
+}
+
+package "Data Access Layer" #LightPink {
+    [XML Persistence] as XMLPersist
+    [JSON Persistence] as JSONPersist
+}
+
+database "employees.xml" as XMLDB
+database "managers.json" as JSONDB
+
+' Connections
+CLI --> SVC : uses
+WebAPI --> SVC : uses
+
+SVC --> EmpRepo : uses
+SVC --> MgrRepo : uses
+
+EmpRepo <|.. XMLPersist : implements
+MgrRepo <|.. JSONPersist : implements
+
+XMLPersist --> XMLDB : read/write
+JSONPersist --> JSONDB : read/write
+
+SVC --> Entities : uses
+EmpRepo --> Entities : uses
+MgrRepo --> Entities : uses
+
+note right of CLI
+  Manager-facing
+  Command Line Interface
+  Menu-driven interaction
+end note
+
+note right of WebAPI
+  Employee-facing
+  REST API Servlet
+  JSON responses
+end note
+
+note bottom of SVC
+  Core business logic
+  Request validation
+  Leave balance calculation
+  Authorization checks
+end note
+
+@enduml

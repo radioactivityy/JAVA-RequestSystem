@@ -1,0 +1,68 @@
+@startuml Deployment Diagram - Standalone
+!theme plain
+skinparam linetype ortho
+
+title Employee Absence Request System - Deployment Diagram (Standalone Mode)
+
+' ==================== NODES ====================
+
+node "<<device>>\nDeveloper Workstation" as DevPC {
+
+    node "<<executionEnvironment>>\nJava Runtime (JRE 17+)" as JRE {
+
+        artifact "<<executable>>\nApplication.jar" as AppJar {
+            component [ManagerCommandLineInterface] as CLI
+            component [AbsenceServiceImpl] as SVC
+            component [XmlEmployeeRepository] as XMLRepo
+            component [JsonManagerRepository] as JSONRepo
+            component [RepositoryRegistry] as Registry
+        }
+    }
+
+    node "<<executionEnvironment>>\nFile System" as FS {
+        artifact "<<file>>\ndata/employees.xml" as EmpXML
+        artifact "<<file>>\ndata/managers.json" as MgrJSON
+    }
+
+    node "<<executionEnvironment>>\nTerminal/Console" as Terminal {
+        component [stdin/stdout] as IO
+    }
+}
+
+actor "Manager" as Manager
+
+' ==================== CONNECTIONS ====================
+
+Manager --> Terminal : interacts
+Terminal --> AppJar : <<executes>>
+CLI --> IO : <<uses>>
+XMLRepo --> EmpXML : <<read/write>>
+JSONRepo --> MgrJSON : <<read/write>>
+
+' ==================== NOTES ====================
+
+note right of DevPC
+  <b>Standalone Deployment</b>
+  Single machine deployment
+  for development/testing
+
+  <b>Requirements:</b>
+  - Java 17+
+  - File system access
+  - Terminal/Console
+end note
+
+note bottom of EmpXML
+  <b>XML Storage</b>
+  - Employee data
+  - Absence requests
+  Thread-safe with ReadWriteLock
+end note
+
+note bottom of MgrJSON
+  <b>JSON Storage</b>
+  - Manager data
+  Thread-safe with ReadWriteLock
+end note
+
+@enduml

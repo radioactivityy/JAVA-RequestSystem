@@ -1,0 +1,144 @@
+@startuml Component Diagram - Detailed
+!theme plain
+skinparam componentStyle uml2
+skinparam linetype ortho
+skinparam nodesep 50
+skinparam ranksep 50
+
+title Employee Absence Request System - Component Diagram (Detailed)
+
+' ==================== PRESENTATION LAYER ====================
+package "Presentation Layer" as PL #LightBlue {
+
+    [ManagerCommandLineInterface] as CLI
+    note right of CLI
+        com.absence.presentation.cli
+        - Menu-driven UI
+        - Text table formatting
+        - Manager authentication
+    end note
+
+    [EmployeeWebController] as WebCtrl
+    note right of WebCtrl
+        com.absence.presentation.web
+        URL: /absence/employee/*
+        - REST endpoints
+        - JSON serialization
+    end note
+}
+
+' ==================== BUSINESS LOGIC LAYER ====================
+package "Business Logic Layer" as BL #LightGreen {
+
+    () "AbsenceService" as IAbsenceSvc
+    [AbsenceServiceImpl] as SvcImpl
+
+    SvcImpl -up- IAbsenceSvc
+
+    package "DTOs" as DTOPkg {
+        [EmployeeDTO] as EmpDTO
+        [AbsenceRequestDTO] as ReqDTO
+        [ManagerDTO] as MgrDTO
+    }
+
+    SvcImpl ..> DTOPkg : creates
+}
+
+' ==================== DOMAIN LAYER ====================
+package "Domain Layer" as DL #LightYellow {
+
+    () "EmployeeRepository" as IEmpRepo
+    () "ManagerRepository" as IMgrRepo
+
+    package "Domain Model" as DomainPkg {
+        [Employee] as Emp
+        [AbsenceRequest] as Req
+        [Manager] as Mgr
+        [RequestStatus] as Status
+
+        Emp *-- Req : contains
+        Req --> Status : has
+    }
+}
+
+' ==================== DATA ACCESS LAYER ====================
+package "Data Access Layer" as DAL #LightPink {
+
+    [XmlEmployeeRepository] as XMLRepo
+    [JsonManagerRepository] as JSONRepo
+
+    XMLRepo -up- IEmpRepo
+    JSONRepo -up- IMgrRepo
+
+    package "XML Models" as XMLPkg {
+        [EmployeeXmlModel] as EmpXML
+        [AbsenceRequestXmlModel] as ReqXML
+        [LocalDateAdapter] as DateAdapter
+    }
+
+    package "JSON Models" as JSONPkg {
+        [ManagerJsonModel] as MgrJSON
+    }
+
+    XMLRepo ..> XMLPkg : uses
+    JSONRepo ..> JSONPkg : uses
+
+    [RepositoryRegistry] as Registry
+    Registry ..> XMLRepo : creates
+    Registry ..> JSONRepo : creates
+    Registry ..> SvcImpl : creates
+}
+
+' ==================== EXTERNAL RESOURCES ====================
+database "employees.xml" as XMLDB
+database "managers.json" as JSONDB
+
+' ==================== CONNECTIONS ====================
+' Presentation to Service
+CLI --> IAbsenceSvc : uses
+WebCtrl --> IAbsenceSvc : uses
+
+' Service to Repositories
+SvcImpl --> IEmpRepo : uses
+SvcImpl --> IMgrRepo : uses
+
+' Repositories to Storage
+XMLRepo --> XMLDB : read/write
+JSONRepo --> JSONDB : read/write
+
+' Domain usage
+SvcImpl ..> DomainPkg : uses
+XMLRepo ..> DomainPkg : converts
+JSONRepo ..> DomainPkg : converts
+
+note as N1
+  <b>AbsenceService Interface</b>
+  + getEmployee(id)
+  + submitRequest(...)
+  + processRequest(...)
+  + getPendingRequests()
+  + cancelRequest(...)
+end note
+
+note as N2
+  <b>EmployeeRepository Interface</b>
+  + findById(id)
+  + findAll()
+  + save(employee)
+  + findAbsenceRequestById(id)
+  + updateAbsenceRequest(req)
+end note
+
+note as N3
+  <b>ManagerRepository Interface</b>
+  + findById(id)
+  + findAll()
+  + save(manager)
+  + validateCredentials(id)
+end note
+
+IAbsenceSvc .. N1
+IEmpRepo .. N2
+IMgrRepo .. N3
+
+@enduml

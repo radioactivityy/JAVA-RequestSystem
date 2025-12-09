@@ -1,0 +1,87 @@
+@startuml Component Diagram - Interfaces
+!theme plain
+skinparam componentStyle uml2
+skinparam linetype polyline
+
+title Employee Absence Request System - Component Interfaces
+
+' ==================== COMPONENTS ====================
+
+[Manager CLI] as CLI #LightBlue
+[Employee Web Controller] as WebCtrl #LightBlue
+[Absence Service] as SVC #LightGreen
+[XML Employee Repository] as XMLRepo #LightPink
+[JSON Manager Repository] as JSONRepo #LightPink
+
+' ==================== INTERFACES ====================
+
+interface "IAbsenceService" as IAbsSvc
+interface "IEmployeeRepository" as IEmpRepo
+interface "IManagerRepository" as IMgrRepo
+
+' Service provides IAbsenceService
+SVC -up- IAbsSvc
+
+' Repositories provide their interfaces
+XMLRepo -up- IEmpRepo
+JSONRepo -up- IMgrRepo
+
+' ==================== REQUIRED INTERFACES ====================
+
+' CLI requires IAbsenceService
+CLI --> IAbsSvc : uses
+
+' WebCtrl requires IAbsenceService
+WebCtrl --> IAbsSvc : uses
+
+' Service requires Repositories
+SVC --> IEmpRepo : uses
+SVC --> IMgrRepo : uses
+
+' ==================== INTERFACE DETAILS ====================
+
+note top of IAbsSvc
+  <b>Provided by:</b> AbsenceServiceImpl
+  <b>Required by:</b> CLI, WebController
+
+  <b>Operations:</b>
+  + getEmployee(id): EmployeeDTO
+  + submitRequest(...): AbsenceRequestDTO
+  + processRequest(mgr, req, approved): AbsenceRequestDTO
+  + getPendingRequests(): List<AbsenceRequestDTO>
+  + cancelRequest(emp, req): boolean
+  + validateManager(id): boolean
+end note
+
+note right of IEmpRepo
+  <b>Provided by:</b> XmlEmployeeRepository
+  <b>Required by:</b> AbsenceServiceImpl
+
+  <b>Operations:</b>
+  + findById(id): Optional<Employee>
+  + findAll(): List<Employee>
+  + save(employee): Employee
+  + findAbsenceRequestById(id): Optional<AbsenceRequest>
+  + updateAbsenceRequest(req): boolean
+end note
+
+note right of IMgrRepo
+  <b>Provided by:</b> JsonManagerRepository
+  <b>Required by:</b> AbsenceServiceImpl
+
+  <b>Operations:</b>
+  + findById(id): Optional<Manager>
+  + findAll(): List<Manager>
+  + save(manager): Manager
+  + validateCredentials(id): boolean
+end note
+
+' ==================== LEGEND ====================
+legend bottom
+  |= Symbol |= Meaning |
+  | --o | Provided Interface (Lollipop) |
+  | --> | Required Interface (Dependency) |
+  | Component provides interface that other components require |
+endlegend
+
+@enduml

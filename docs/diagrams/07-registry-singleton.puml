@@ -1,0 +1,82 @@
+@startuml Registry Singleton
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam packageFontSize 14
+skinparam linetype ortho
+
+title Composition Root - Registry Pattern
+
+package "Registry (Singleton)" <<Rectangle>> {
+
+    class RepositoryRegistry <<Singleton>> {
+        {static} -instance: RepositoryRegistry {volatile}
+        {static} -DEFAULT_EMPLOYEES_FILE: String = "data/employees.xml"
+        {static} -DEFAULT_MANAGERS_FILE: String = "data/managers.json"
+        -employeeRepository: EmployeeRepository {final}
+        -managerRepository: ManagerRepository {final}
+        -absenceService: AbsenceService {final}
+        --
+        -RepositoryRegistry(employeesFile: String, managersFile: String)
+        {static} +getInstance(): RepositoryRegistry
+        {static} +getInstance(employeesFile: String, managersFile: String): RepositoryRegistry
+        {static} +reset(): void {synchronized}
+        +getEmployeeRepository(): EmployeeRepository
+        +getManagerRepository(): ManagerRepository
+        +getAbsenceService(): AbsenceService
+    }
+}
+
+package "Application Entry Point" {
+    class Application {
+        {static} +main(args: String[]): void
+        {static} -runManagerCli(absenceService: AbsenceService): void
+        {static} -runDemo(absenceService: AbsenceService): void
+    }
+}
+
+package "Repository Implementations" {
+    class XmlEmployeeRepository
+    class JsonManagerRepository
+}
+
+package "Service Layer" {
+    class AbsenceServiceImpl
+}
+
+package "Presentation Layer" {
+    class ManagerCommandLineInterface
+    class EmployeeWebController
+}
+
+' Creation relationships
+RepositoryRegistry ..> XmlEmployeeRepository : creates
+RepositoryRegistry ..> JsonManagerRepository : creates
+RepositoryRegistry ..> AbsenceServiceImpl : creates
+
+Application --> RepositoryRegistry : uses
+Application ..> ManagerCommandLineInterface : creates
+EmployeeWebController --> RepositoryRegistry : uses
+
+note right of RepositoryRegistry
+  <b>Singleton Pattern</b>
+  Double-checked locking
+  Thread-safe lazy initialization
+
+  <b>Registry Pattern</b>
+  Centralized dependency resolution
+  Composition root for DI
+
+  <b>Service Locator</b>
+  Provides configured instances
+end note
+
+note bottom of Application
+  <b>Bootstrap Process:</b>
+  1. Get RepositoryRegistry instance
+  2. Get AbsenceService from registry
+  3. Check --demo argument
+  4. Run CLI or demo mode
+end note
+
+@enduml

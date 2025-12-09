@@ -1,0 +1,104 @@
+@startuml Presentation Layer
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam packageFontSize 14
+skinparam linetype ortho
+
+title Presentation Layer - Controllers
+
+package "CLI Presentation" <<Rectangle>> {
+
+    class ManagerCommandLineInterface {
+        -absenceService: AbsenceService
+        -reader: BufferedReader
+        -output: PrintStream
+        -currentManagerId: String
+        -running: boolean
+        --
+        +ManagerCommandLineInterface(absenceService: AbsenceService)
+        +ManagerCommandLineInterface(absenceService: AbsenceService, reader: BufferedReader, output: PrintStream)
+        +start(): void
+        -printWelcome(): void
+        -authenticate(): boolean
+        -printMenu(): void
+        -processChoice(choice: String): void
+        -viewPendingRequests(): void
+        -viewRequestsByStatus(): void
+        -approveRequest(): void
+        -rejectRequest(): void
+        -viewRequestDetails(): void
+        -exit(): void
+        -displayRequestList(requests: List<AbsenceRequestDTO>): void
+        -truncate(str: String, maxLength: int): String
+    }
+}
+
+package "Web Presentation" <<Rectangle>> {
+
+    class EmployeeWebController <<@WebServlet>> {
+        -absenceService: AbsenceService
+        --
+        +EmployeeWebController()
+        +EmployeeWebController(absenceService: AbsenceService)
+        +init(): void
+        +setAbsenceService(absenceService: AbsenceService): void
+        #doGet(request: HttpServletRequest, response: HttpServletResponse): void
+        #doPost(request: HttpServletRequest, response: HttpServletResponse): void
+        #doDelete(request: HttpServletRequest, response: HttpServletResponse): void
+        -handleGetEmployee(employeeId: String, response: HttpServletResponse): void
+        -handleGetRequests(employeeId: String, response: HttpServletResponse): void
+        -handleSubmitRequest(employeeId: String, request: HttpServletRequest, response: HttpServletResponse): void
+        -handleCancelRequest(employeeId: String, requestId: String, response: HttpServletResponse): void
+        -sendJsonResponse(response: HttpServletResponse, status: int, json: String): void
+        -sendError(response: HttpServletResponse, status: int, message: String): void
+        -formatEmployeeJson(employee: EmployeeDTO): String
+        -formatRequestJson(request: AbsenceRequestDTO): String
+        -formatRequestListJson(requests: List<AbsenceRequestDTO>): String
+        -escapeJson(value: String): String
+    }
+}
+
+package "Service Layer" {
+    interface AbsenceService <<interface>>
+}
+
+package "DTOs" {
+    class EmployeeDTO <<record>>
+    class AbsenceRequestDTO <<record>>
+}
+
+' Relationships
+ManagerCommandLineInterface --> AbsenceService : uses
+EmployeeWebController --> AbsenceService : uses
+ManagerCommandLineInterface ..> AbsenceRequestDTO : displays
+EmployeeWebController ..> EmployeeDTO : returns JSON
+EmployeeWebController ..> AbsenceRequestDTO : returns JSON
+
+note right of ManagerCommandLineInterface
+  <b>CLI Controller (MVC)</b>
+  - Manager-facing interface
+  - Menu-driven interaction
+  - Text table formatting
+
+  <b>Operations:</b>
+  - View pending requests
+  - Approve/Reject requests
+  - View request details
+end note
+
+note right of EmployeeWebController
+  <b>REST Controller (MVC)</b>
+  URL: /absence/employee/*
+
+  <b>Endpoints:</b>
+  GET /{id} - Employee info
+  GET /{id}/requests - List requests
+  POST /{id}/request - Submit request
+  DELETE /{id}/request/{rid} - Cancel
+
+  <b>Response Format:</b>
+  JSON with manual serialization
+end note
+
+@enduml

@@ -1,0 +1,108 @@
+@startuml Domain Model - Entity Classes
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam packageFontSize 14
+skinparam linetype ortho
+
+title Domain Model - Entity Layer (com.absence.domain.model)
+
+package "Domain Model" {
+
+    enum RequestStatus {
+        PENDING
+        APPROVED
+        REJECTED
+        --
+        -displayName: String
+        +getDisplayName(): String
+    }
+
+    class Employee <<Aggregate Root>> {
+        -id: String
+        -name: String
+        -email: String
+        -department: String
+        -annualLeaveBalance: int
+        -absenceRequests: List<AbsenceRequest>
+        --
+        +Employee()
+        +Employee(id, name, email, department, balance)
+        +addAbsenceRequest(request: AbsenceRequest): void
+        +calculateRemainingLeave(): int
+        +hasSufficientBalance(request: AbsenceRequest): boolean
+        +getAbsenceRequests(): List<AbsenceRequest>
+        +setAbsenceRequests(requests: List): void
+        +equals(o: Object): boolean
+        +hashCode(): int
+        +toString(): String
+        .. getters/setters ..
+    }
+
+    class AbsenceRequest <<Entity>> {
+        -id: String {UUID}
+        -employeeId: String
+        -startDate: LocalDate
+        -endDate: LocalDate
+        -reason: String
+        -status: RequestStatus
+        -processedByManagerId: String
+        -submissionDate: LocalDate
+        --
+        +AbsenceRequest()
+        +AbsenceRequest(employeeId, startDate, endDate, reason)
+        +calculateDuration(): long
+        +isValid(): boolean
+        +equals(o: Object): boolean
+        +hashCode(): int
+        +toString(): String
+        .. getters/setters ..
+    }
+
+    class Manager <<Entity>> {
+        -id: String
+        -name: String
+        -email: String
+        -department: String
+        -active: boolean
+        --
+        +Manager()
+        +Manager(id, name, email, department)
+        +canManageDepartment(targetDepartment: String): boolean
+        +equals(o: Object): boolean
+        +hashCode(): int
+        +toString(): String
+        .. getters/setters ..
+    }
+}
+
+' Relationships
+Employee "1" *-- "0..*" AbsenceRequest : contains >
+AbsenceRequest --> RequestStatus : status
+AbsenceRequest "0..*" ..> "0..1" Manager : processedBy >
+Manager "1" ..> "0..*" AbsenceRequest : processes >
+
+note right of Employee
+  <b>Aggregate Root</b>
+  Manages collection of
+  AbsenceRequest entities
+  Business logic for leave
+  balance calculation
+end note
+
+note bottom of AbsenceRequest
+  <b>Business Rules:</b>
+  - endDate >= startDate
+  - startDate >= today
+  - Auto-generates UUID
+  - Auto-sets submissionDate
+end note
+
+note left of Manager
+  <b>Authorization Logic:</b>
+  canManageDepartment returns
+  true if department is null
+  (manages all) or matches
+end note
+
+@enduml

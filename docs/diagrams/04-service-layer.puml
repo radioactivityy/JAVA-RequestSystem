@@ -1,0 +1,82 @@
+@startuml Service Layer
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam packageFontSize 14
+skinparam linetype ortho
+
+title Service Layer - Business Logic
+
+package "Domain Service Layer" <<Rectangle>> {
+
+    interface AbsenceService <<interface>> {
+        __ Employee Operations __
+        +getEmployee(employeeId: String): Optional<EmployeeDTO>
+        +getRemainingLeaveBalance(employeeId: String): int
+        +submitRequest(employeeId: String, startDate: LocalDate, endDate: LocalDate, reason: String): AbsenceRequestDTO
+        +getEmployeeRequests(employeeId: String): List<AbsenceRequestDTO>
+        +cancelRequest(employeeId: String, requestId: String): boolean
+        __ Manager Operations __
+        +processRequest(managerId: String, requestId: String, approved: boolean): AbsenceRequestDTO
+        +getPendingRequests(): List<AbsenceRequestDTO>
+        +getPendingRequestsByDepartment(department: String): List<AbsenceRequestDTO>
+        +getRequestsByStatus(status: RequestStatus): List<AbsenceRequestDTO>
+        +validateManager(managerId: String): boolean
+        +getRequestDetails(requestId: String): Optional<AbsenceRequestDTO>
+    }
+
+    class AbsenceServiceImpl {
+        -employeeRepository: EmployeeRepository
+        -managerRepository: ManagerRepository
+        --
+        +AbsenceServiceImpl(employeeRepository: EmployeeRepository, managerRepository: ManagerRepository)
+        +getEmployee(employeeId: String): Optional<EmployeeDTO>
+        +getRemainingLeaveBalance(employeeId: String): int
+        +submitRequest(employeeId: String, startDate: LocalDate, endDate: LocalDate, reason: String): AbsenceRequestDTO
+        +getEmployeeRequests(employeeId: String): List<AbsenceRequestDTO>
+        +cancelRequest(employeeId: String, requestId: String): boolean
+        +processRequest(managerId: String, requestId: String, approved: boolean): AbsenceRequestDTO
+        +getPendingRequests(): List<AbsenceRequestDTO>
+        +getPendingRequestsByDepartment(department: String): List<AbsenceRequestDTO>
+        +getRequestsByStatus(status: RequestStatus): List<AbsenceRequestDTO>
+        +validateManager(managerId: String): boolean
+        +getRequestDetails(requestId: String): Optional<AbsenceRequestDTO>
+    }
+}
+
+package "Repository Interfaces" {
+    interface EmployeeRepository <<interface>>
+    interface ManagerRepository <<interface>>
+}
+
+package "DTOs" {
+    class EmployeeDTO <<record>>
+    class AbsenceRequestDTO <<record>>
+}
+
+' Relationships
+AbsenceServiceImpl ..|> AbsenceService : implements
+AbsenceServiceImpl --> EmployeeRepository : uses
+AbsenceServiceImpl --> ManagerRepository : uses
+AbsenceServiceImpl ..> EmployeeDTO : returns
+AbsenceServiceImpl ..> AbsenceRequestDTO : returns
+
+note right of AbsenceService
+  <b>Service Layer Pattern</b>
+  - Facade for business operations
+  - Coordinates repositories
+  - Returns DTOs to presentation
+end note
+
+note bottom of AbsenceServiceImpl
+  <b>Business Logic:</b>
+  - Leave balance validation
+  - Request date validation
+  - Manager authorization
+  - Status transitions
+
+  <b>Dependency Injection:</b>
+  Constructor injection of repositories
+end note
+
+@enduml

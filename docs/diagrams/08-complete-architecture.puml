@@ -1,0 +1,118 @@
+@startuml Complete Architecture
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 11
+skinparam packageFontSize 13
+skinparam linetype ortho
+skinparam packageStyle rectangle
+
+title Employee Absence Request System - Complete Architecture
+
+package "Presentation Layer (PL)" #LightBlue {
+    class ManagerCommandLineInterface <<CLI>>
+    class EmployeeWebController <<REST>>
+}
+
+package "Business Logic Layer (BL)" #LightGreen {
+
+    package "Service" {
+        interface AbsenceService <<interface>>
+        class AbsenceServiceImpl
+    }
+
+    package "DTOs" {
+        class EmployeeDTO <<record>>
+        class AbsenceRequestDTO <<record>>
+        class ManagerDTO <<record>>
+    }
+}
+
+package "Domain Layer" #LightYellow {
+
+    package "Entities" {
+        class Employee <<AggregateRoot>>
+        class AbsenceRequest <<Entity>>
+        class Manager <<Entity>>
+        enum RequestStatus
+    }
+
+    package "Repository Contracts" {
+        interface EmployeeRepository <<interface>>
+        interface ManagerRepository <<interface>>
+    }
+}
+
+package "Data Access Layer (DAL)" #LightPink {
+
+    package "XML Persistence" {
+        class XmlEmployeeRepository
+        class EmployeeXmlModel
+        class AbsenceRequestXmlModel
+        class LocalDateAdapter <<Adapter>>
+    }
+
+    package "JSON Persistence" {
+        class JsonManagerRepository
+        class ManagerJsonModel
+    }
+
+    package "Registry" {
+        class RepositoryRegistry <<Singleton>>
+    }
+}
+
+class "employees.xml" as xmldb <<file>>
+class "managers.json" as jsondb <<file>>
+
+' Presentation to Service
+ManagerCommandLineInterface --> AbsenceService
+EmployeeWebController --> AbsenceService
+
+' Service Implementation
+AbsenceServiceImpl ..|> AbsenceService
+AbsenceServiceImpl --> EmployeeRepository
+AbsenceServiceImpl --> ManagerRepository
+AbsenceServiceImpl ..> EmployeeDTO
+AbsenceServiceImpl ..> AbsenceRequestDTO
+
+' DTOs to Entities
+EmployeeDTO ..> Employee : converts
+AbsenceRequestDTO ..> AbsenceRequest : converts
+ManagerDTO ..> Manager : converts
+
+' Entity relationships
+Employee *-- AbsenceRequest
+AbsenceRequest --> RequestStatus
+
+' Repository implementations
+XmlEmployeeRepository ..|> EmployeeRepository
+JsonManagerRepository ..|> ManagerRepository
+
+' Data models
+XmlEmployeeRepository --> EmployeeXmlModel
+EmployeeXmlModel --> AbsenceRequestXmlModel
+AbsenceRequestXmlModel --> LocalDateAdapter
+JsonManagerRepository --> ManagerJsonModel
+
+EmployeeXmlModel ..> Employee
+AbsenceRequestXmlModel ..> AbsenceRequest
+ManagerJsonModel ..> Manager
+
+' Persistence
+XmlEmployeeRepository --> xmldb
+JsonManagerRepository --> jsondb
+
+' Registry
+RepositoryRegistry ..> XmlEmployeeRepository : creates
+RepositoryRegistry ..> JsonManagerRepository : creates
+RepositoryRegistry ..> AbsenceServiceImpl : creates
+
+note as N1
+  <b>Layer Dependencies:</b>
+  PL -> BL -> Domain <- DAL
+
+  Domain layer has NO dependencies
+  on other layers (Clean Architecture)
+end note
+
+@enduml

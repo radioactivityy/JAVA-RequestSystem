@@ -1,0 +1,115 @@
+@startuml Data Layer Models
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam packageFontSize 14
+skinparam linetype ortho
+
+title Data Layer - XML/JSON Models (Anti-Corruption Layer)
+
+package "XML Data Models" <<Rectangle>> {
+
+    class EmployeeXmlWrapper <<@XmlRootElement>> {
+        -employees: List<EmployeeXmlModel>
+        --
+        +EmployeeXmlWrapper()
+        +EmployeeXmlWrapper(employees: List<EmployeeXmlModel>)
+        +getEmployees(): List<EmployeeXmlModel>
+        +setEmployees(employees: List): void
+    }
+
+    class EmployeeXmlModel <<@XmlAccessorType>> {
+        -id: String {XmlAttribute}
+        -name: String {XmlElement}
+        -email: String {XmlElement}
+        -department: String {XmlElement}
+        -annualLeaveBalance: int {XmlElement}
+        -absenceRequests: List<AbsenceRequestXmlModel>
+        --
+        {static} +fromDomain(employee: Employee): EmployeeXmlModel
+        +toDomain(): Employee
+        .. getters/setters ..
+    }
+
+    class AbsenceRequestXmlModel <<@XmlAccessorType>> {
+        -id: String {XmlAttribute}
+        -employeeId: String {XmlElement}
+        -startDate: LocalDate {XmlJavaTypeAdapter}
+        -endDate: LocalDate {XmlJavaTypeAdapter}
+        -reason: String {XmlElement}
+        -status: String {XmlElement}
+        -processedByManagerId: String {XmlElement}
+        -submissionDate: LocalDate {XmlJavaTypeAdapter}
+        --
+        {static} +fromDomain(request: AbsenceRequest): AbsenceRequestXmlModel
+        +toDomain(): AbsenceRequest
+        .. getters/setters ..
+    }
+
+    class LocalDateAdapter <<XmlAdapter>> {
+        {static} -FORMATTER: DateTimeFormatter
+        --
+        +unmarshal(value: String): LocalDate
+        +marshal(value: LocalDate): String
+    }
+}
+
+package "JSON Data Models" <<Rectangle>> {
+
+    class ManagerJsonWrapper {
+        -managers: List<ManagerJsonModel> {JsonProperty}
+        --
+        +ManagerJsonWrapper()
+        +ManagerJsonWrapper(managers: List<ManagerJsonModel>)
+        +getManagers(): List<ManagerJsonModel>
+        +setManagers(managers: List): void
+    }
+
+    class ManagerJsonModel {
+        -id: String {JsonProperty}
+        -name: String {JsonProperty}
+        -email: String {JsonProperty}
+        -department: String {JsonProperty}
+        -active: boolean {JsonProperty}
+        --
+        {static} +fromDomain(manager: Manager): ManagerJsonModel
+        +toDomain(): Manager
+        .. getters/setters ..
+    }
+}
+
+package "Domain Entities" {
+    class Employee <<Entity>>
+    class AbsenceRequest <<Entity>>
+    class Manager <<Entity>>
+}
+
+' Relationships
+EmployeeXmlWrapper "1" *-- "0..*" EmployeeXmlModel
+EmployeeXmlModel "1" *-- "0..*" AbsenceRequestXmlModel
+AbsenceRequestXmlModel --> LocalDateAdapter : uses
+ManagerJsonWrapper "1" *-- "0..*" ManagerJsonModel
+
+EmployeeXmlModel ..> Employee : <<converts>>
+AbsenceRequestXmlModel ..> AbsenceRequest : <<converts>>
+ManagerJsonModel ..> Manager : <<converts>>
+
+note right of EmployeeXmlModel
+  <b>Anti-Corruption Layer</b>
+  Isolates domain from JAXB
+  framework annotations
+end note
+
+note right of ManagerJsonModel
+  <b>Anti-Corruption Layer</b>
+  Isolates domain from Jackson
+  framework annotations
+end note
+
+note bottom of LocalDateAdapter
+  <b>Adapter Pattern</b>
+  Handles LocalDate ↔ String
+  conversion for XML
+end note
+
+@enduml

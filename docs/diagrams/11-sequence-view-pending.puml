@@ -1,0 +1,51 @@
+@startuml Sequence - View Pending Requests
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title Sequence Diagram: Manager Views Pending Requests (CLI)
+
+actor Manager as mgr
+participant "ManagerCommandLine\nInterface" as cli
+participant "AbsenceService" as svc
+participant "EmployeeRepository" as repo
+participant "Employee" as emp
+database "employees.xml" as db
+
+mgr -> cli : Enter choice: 1 (View Pending Requests)
+activate cli
+
+cli -> svc : getPendingRequests()
+activate svc
+
+svc -> repo : findAbsenceRequestsByStatus(PENDING)
+activate repo
+
+repo -> db : Read from cache
+repo -> repo : Stream all employees
+repo -> repo : flatMap to all requests
+repo -> repo : filter by status == PENDING
+repo --> svc : List<AbsenceRequest>
+deactivate repo
+
+loop for each AbsenceRequest
+    svc -> repo : findById(request.employeeId)
+    repo --> svc : Optional<Employee>
+    svc -> svc : AbsenceRequestDTO.fromEntity(request, employee.name)
+end
+
+svc --> cli : List<AbsenceRequestDTO>
+deactivate svc
+
+cli -> cli : displayRequestList(requests)
+note right of cli
+    Formats table:
+    | ID | Employee | Start | End | Days | Reason | Status |
+    Each row truncated to fit terminal width
+end note
+
+cli --> mgr : Display formatted table
+
+deactivate cli
+
+@enduml

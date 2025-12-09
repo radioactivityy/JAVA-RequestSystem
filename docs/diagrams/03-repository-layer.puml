@@ -1,0 +1,106 @@
+@startuml Repository Layer
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam packageFontSize 14
+skinparam linetype ortho
+
+title Repository Pattern - Data Access Layer
+
+package "Domain Layer (Interfaces)" <<Rectangle>> {
+
+    interface EmployeeRepository <<interface>> {
+        +findById(id: String): Optional<Employee>
+        +findByEmail(email: String): Optional<Employee>
+        +findAll(): List<Employee>
+        +findByDepartment(department: String): List<Employee>
+        +save(employee: Employee): Employee
+        +deleteById(id: String): boolean
+        +findAbsenceRequestById(requestId: String): Optional<AbsenceRequest>
+        +findAbsenceRequestsByStatus(status: RequestStatus): List<AbsenceRequest>
+        +updateAbsenceRequest(request: AbsenceRequest): boolean
+    }
+
+    interface ManagerRepository <<interface>> {
+        +findById(id: String): Optional<Manager>
+        +findByEmail(email: String): Optional<Manager>
+        +findAll(): List<Manager>
+        +findAllActive(): List<Manager>
+        +findByDepartment(department: String): List<Manager>
+        +save(manager: Manager): Manager
+        +deleteById(id: String): boolean
+        +validateCredentials(managerId: String): boolean
+    }
+}
+
+package "Data Layer (Implementations)" <<Rectangle>> {
+
+    class XmlEmployeeRepository {
+        -filePath: String
+        -jaxbContext: JAXBContext
+        -lock: ReadWriteLock
+        -cachedEmployees: List<Employee>
+        --
+        +XmlEmployeeRepository(filePath: String)
+        -loadEmployees(): void
+        -saveEmployees(): void
+        +findById(id: String): Optional<Employee>
+        +findByEmail(email: String): Optional<Employee>
+        +findAll(): List<Employee>
+        +findByDepartment(department: String): List<Employee>
+        +save(employee: Employee): Employee
+        +deleteById(id: String): boolean
+        +findAbsenceRequestById(requestId: String): Optional<AbsenceRequest>
+        +findAbsenceRequestsByStatus(status: RequestStatus): List<AbsenceRequest>
+        +updateAbsenceRequest(request: AbsenceRequest): boolean
+    }
+
+    class JsonManagerRepository {
+        -filePath: String
+        -objectMapper: ObjectMapper
+        -lock: ReadWriteLock
+        -cachedManagers: List<Manager>
+        --
+        +JsonManagerRepository(filePath: String)
+        -loadManagers(): void
+        -saveManagers(): void
+        +findById(id: String): Optional<Manager>
+        +findByEmail(email: String): Optional<Manager>
+        +findAll(): List<Manager>
+        +findAllActive(): List<Manager>
+        +findByDepartment(department: String): List<Manager>
+        +save(manager: Manager): Manager
+        +deleteById(id: String): boolean
+        +validateCredentials(managerId: String): boolean
+    }
+}
+
+' Implementation relationships
+XmlEmployeeRepository ..|> EmployeeRepository : implements
+JsonManagerRepository ..|> ManagerRepository : implements
+
+note right of EmployeeRepository
+  <b>Repository Pattern</b>
+  Domain layer defines contract
+  Data layer provides implementation
+end note
+
+note bottom of XmlEmployeeRepository
+  <b>Thread Safety:</b>
+  ReadWriteLock for concurrent access
+  <b>Caching:</b>
+  In-memory cache for performance
+  <b>Persistence:</b>
+  JAXB XML serialization
+end note
+
+note bottom of JsonManagerRepository
+  <b>Thread Safety:</b>
+  ReadWriteLock for concurrent access
+  <b>Caching:</b>
+  In-memory cache for performance
+  <b>Persistence:</b>
+  Jackson JSON serialization
+end note
+
+@enduml
